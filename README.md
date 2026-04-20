@@ -15,3 +15,5 @@ Split the process:
 - Prevents race conditions and double booking
 - Improves system stability under high load
 - Ensures data consistency during peak traffic
+
+<img width="919" height="665" alt="image" src="https://github.com/user-attachments/assets/71358539-0c69-457f-999b-fcec0926a2de" />
