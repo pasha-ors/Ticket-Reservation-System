@@ -1,9 +1,12 @@
 package com.event_driven.ticket.controller;
 
-import com.event_driven.ticket.model.dto.ReservationRequestDTO;
-import com.event_driven.ticket.model.dto.SeatResponseDTO;
+import com.event_driven.ticket.dto.ReservationRequest;
+import com.event_driven.ticket.dto.ReservationResponse;
+import com.event_driven.ticket.dto.SeatResponse;
+import com.event_driven.ticket.model.CustomUserDetails;
 import com.event_driven.ticket.service.BookingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -16,11 +19,11 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping("/seats")
-    public List<SeatResponseDTO> getSeat(@RequestParam String row) throws Exception
+    public List<SeatResponse> getSeat(@RequestParam String row) throws Exception
     {
         return bookingService.getAvailableSeatsInRow(row)
                 .stream()
-                .map(seat -> new SeatResponseDTO(
+                .map(seat -> new SeatResponse(
                         seat.getId(),
                         seat.getRowNumber(),
                         seat.getSeatNumber(),
@@ -29,10 +32,8 @@ public class BookingController {
     }
 
     @PostMapping("/reserve")
-    public String reserve(@RequestBody ReservationRequestDTO request) throws Exception
+    public ReservationResponse reserve(@RequestBody ReservationRequest request, @AuthenticationPrincipal CustomUserDetails user) throws Exception
     {
-        bookingService.reserveSeat(request.seatId(), request.userId());
-        return "[Booking Controller] Seat reserved: " + request.seatId();
+        return bookingService.reserveSeat(request, user.getId());
     }
-
 }

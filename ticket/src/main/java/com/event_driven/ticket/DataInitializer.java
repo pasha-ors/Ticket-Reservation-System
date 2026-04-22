@@ -5,26 +5,33 @@ import com.event_driven.ticket.model.seat.SeatStatus;
 import com.event_driven.ticket.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Component
+import java.util.UUID;
+
+@Configuration
 @RequiredArgsConstructor
-public class DataInitializer implements CommandLineRunner {
+public class DataInitializer {
 
     private final SeatRepository seatRepository;
 
-    @Override
-    public void run(String... args) throws Exception {
+    @Bean
+    CommandLineRunner initSeats() {
+        return args -> {
 
-        if(seatRepository.count() == 0){
-            for(int i = 1; i <= 10; i++){
+            if (seatRepository.count() > 0) return;
+
+            for (int i = 1; i <= 10; i++) {
                 Seat seat = new Seat();
                 seat.setRowNumber("A1");
                 seat.setSeatNumber(String.valueOf(i));
                 seat.setStatus(SeatStatus.AVAILABLE);
+
                 seatRepository.save(seat);
             }
-        }
-        System.out.println("✅ H2 Database initialized with 10 seats in row A1");
+
+            System.out.println(">>> Seats initialized");
+        };
     }
 }
