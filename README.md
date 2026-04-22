@@ -1,19 +1,114 @@
-## High-Load Problem
+# Event-Driven Ticket System
 
-At 10:00 AM, 100,000 users try to buy 5,000 tickets at the same time.
+Backend system for seat reservation under high concurrency.  
+Designed to solve real-world problems like double booking, race conditions, and time-based state consistency.
 
-The system must:
-- stay stable under heavy load
-- prevent double booking
+---
 
-### Solution
-Split the process:
-1. **Reservation** — temporarily hold a seat
-2. **Payment** — confirm and finalize the purchase
+## Problems & Solutions
 
-### Benefits
-- Prevents race conditions and double booking
-- Improves system stability under high load
-- Ensures data consistency during peak traffic
+### 1. Double Booking (Race Conditions)
 
-<img width="919" height="665" alt="image" src="https://github.com/user-attachments/assets/71358539-0c69-457f-999b-fcec0926a2de" />
+**Problem:**  
+Multiple users attempt to reserve the same seat at the same time.
+
+**Solution:**  
+- Optimistic locking using `@Version`
+- Conflict detection via `ObjectOptimisticLockingFailureException`
+
+**Result:**  
+Only one user successfully reserves the seat, others receive a safe failure.
+
+---
+
+### 2. Temporary Reservations (Seat Holding)
+
+**Problem:**  
+Users may abandon the booking process, leaving seats blocked.
+
+**Solution:**  
+- Seats move to `RESERVED` state with timestamp
+- 10-minute expiration window
+- Background job releases expired reservations
+
+**Result:**  
+System avoids dead seats and maintains availability.
+
+---
+
+### 3. Inconsistent State During Payment
+
+**Problem:**  
+Seat state can become invalid if payment fails or is interrupted.
+
+**Solution:**  
+- Controlled state transitions:
+  - `AVAILABLE → RESERVED → SOLD`
+- Rollback logic on payment failure
+
+**Result:**  
+Seat state always remains consistent.
+
+---
+
+### 4. Concurrent Updates
+
+**Problem:**  
+Multiple updates to the same entity can overwrite each other.
+
+**Solution:**  
+- Optimistic locking (`@Version`)
+- Transaction boundaries
+
+**Result:**  
+Safe concurrent modifications without data corruption.
+
+---
+
+### 5. Time-Based State Validation
+
+**Problem:**  
+A reserved seat might appear unavailable even after expiration.
+
+**Solution:**  
+- Runtime validation (`isSeatActuallyAvailable`)
+- Scheduled cleanup (`@Scheduled`)
+
+**Result:**  
+Accurate seat availability at all times.
+
+---
+
+## Core Features
+
+- JWT authentication
+- Seat reservation with expiration
+- Simulated payment processing
+- Automatic cleanup of expired reservations
+- Concurrency-safe booking
+
+---
+
+## Tech Stack
+
+- Java 25
+- Spring Boot 3
+- Spring Security (JWT)
+- Spring Data JPA (Hibernate)
+- PostgreSQL
+- Redis
+
+---
+
+## Running the Project
+
+### Start dependencies
+
+```bash
+docker run -d -p 5433:5432 \
+  -e POSTGRES_DB=ticket_db \
+  -e POSTGRES_USER=ticket_user \
+  -e POSTGRES_PASSWORD=ticket_pass \
+  postgres:15
+
+docker run -d -p 6379:6379 redis:7
