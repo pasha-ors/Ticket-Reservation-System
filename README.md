@@ -1,4 +1,4 @@
-# Event-Driven Ticket System
+# Ticket Reservation System
 
 Backend system for seat reservation under high concurrency.  
 Designed to solve real-world problems like double booking, race conditions, and time-based state consistency.
